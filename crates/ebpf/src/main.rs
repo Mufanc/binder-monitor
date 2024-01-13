@@ -31,9 +31,15 @@ fn run_catching(ctx: &TracePointContext) -> Result<u32, u32> {
     let current_pid = pid_tgid >> 32 & 0xFFFFFFFF;
     let current_tid = pid_tgid & 0xFFFFFFFF;
 
-    if event.reply != 0 {
-        info!(ctx, "binder_reply: {}:{} -> {}:{}", current_pid, current_tid, event.to_proc, event.to_thread);
-    }
+    let transaction_type = if event.flags & 1 != 0 {
+        "(o)"
+    } else if event.reply != 0 {
+        "(r)"
+    } else {
+        "( )"
+    };
+
+    info!(ctx, "binder: {}:{}\t -> {}:{}\t {}", current_pid, current_tid, event.to_proc, event.to_thread, transaction_type);
 
     Ok(0)
 }
