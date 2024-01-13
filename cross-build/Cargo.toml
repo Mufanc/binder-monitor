@@ -1,0 +1,8 @@
+[package]
+name = "cross-build"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.4", features = ["derive"] }
+glob = "0.3"
