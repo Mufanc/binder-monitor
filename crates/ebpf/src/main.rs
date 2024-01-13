@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use aya_bpf::{BpfContext, macros::tracepoint, programs::TracePointContext};
+use aya_bpf::{BpfContext, helpers, macros::tracepoint, programs::TracePointContext};
 use aya_log_ebpf::info;
 
 #[repr(C)]
@@ -26,7 +26,14 @@ pub fn binder_monitor(ctx: TracePointContext) -> u32 {
 fn run_catching(ctx: &TracePointContext) -> Result<u32, u32> {
     let event: &BinderTransactionEvent = unsafe { &*(ctx.as_ptr().add(8) as *const _) };
 
-    info!(ctx, "debug_id={}", event.debug_id);
+    let pid_tgid = helpers::bpf_get_current_pid_tgid();
+
+    let current_pid = pid_tgid >> 32 & 0xFFFFFFFF;
+    let current_tid = pid_tgid & 0xFFFFFFFF;
+
+    if event.reply != 0 {
+        info!(ctx, "binder_reply: {}:{} -> {}:{}", current_pid, current_tid, event.to_proc, event.to_thread);
+    }
 
     Ok(0)
 }
